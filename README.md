@@ -1,6 +1,6 @@
 # Olay for Rails
 
-Places [Olay][http://orgsync.github.com/olay] into the Rails asset pipeline.
+Places [Olay](http://orgsync.github.com/olay) into the Rails asset pipeline.
 
 ## Versioning
 
