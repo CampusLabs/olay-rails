@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'olay/rails/version'
 
 Gem::Specification.new do |gem|
-  gem.name          = 'olay'
+  gem.name          = 'olay-rails'
   gem.version       = Olay::Rails::VERSION
   gem.summary       = "Overlays that don't suck."
   gem.description   = "Places Olay #{Olay::VERSION} in the Rails asset pipeline."
