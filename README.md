@@ -20,7 +20,7 @@ And then execute:
 
 In your application.js:
 
-    // require olay
+    //= require olay
 
 In your application.scss:
 
