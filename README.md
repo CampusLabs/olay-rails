@@ -10,7 +10,7 @@ This project uses [Semantic Versioning](http://semver.org/) and will account for
 
 Add this line to your application's Gemfile:
 
-    gem 'olay-rails', '~> 0.1'
+    gem 'olay', '~> 0.1'
 
 And then execute:
 
