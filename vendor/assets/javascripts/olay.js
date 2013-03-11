@@ -4,12 +4,15 @@
   // Store a local reference to jQuery.
   var $ = window.jQuery;
 
-  // This private function will be used to stop event propagation in $content.
-  var stopPropagation = function (ev) { ev.stopPropagation(); };
-
   // Selector for tabbable elements.
   var tabbable =
     ':input, [tabindex], [contenteditable], [href], iframe, object, embed';
+
+  // Convenience method for `off`/`on`ing in jQuery.
+  var delegate = function ($el, ev, selector, cb) {
+    $el.off.call($el, ev, selector, cb);
+    $el.on.call($el, ev, selector, cb);
+  };
 
   // Listen for keydown events.
   $(document).keydown(function (ev) {
@@ -33,14 +36,19 @@
     // Extend the instance with its options.
     for (var name in options) this[name] = options[name];
 
-    // Store a bound `hide` to be used for callbacks. This is also used to
+    // Store bound listeners to be used for callbacks. This is also used to
     // ensure event callbacks can be removed consistently.
     var self = this;
     this._hide = function () { return self.hide(); };
+    var event;
+    this._$containerClick = function (ev) {
+      if (self.hideOnClick && event !== ev.originalEvent) self.hide();
+    };
+    this._$contentClick = function (ev) { event = ev.originalEvent; };
 
     // Create the necessary DOM nodes.
     this.$container = $('<div>')
-      .addClass('js-olay-container')
+      .addClass('js-olay-container ')
       .addClass(this.transition)
       .append(
     this.$table = $('<div>')
@@ -51,8 +59,7 @@
       .append(
     this.$content = $('<div>')
       .addClass('js-olay-content')
-      .attr({role: 'alertdialog', 'aria-label': this.ariaLabel})
-      .on('click', '.js-olay-hide', this._hide))));
+      .attr({role: 'alertdialog', 'aria-label': this.ariaLabel}))));
 
     // Finally, set the element.
     this.setElement(el);
@@ -94,19 +101,20 @@
       clearTimeout(this._timeout);
       if (!inDom) this._append();
 
-      // Force a redraw before and after adding the transition class. Not doing
-      // this will apply the end result of the transition instantly, which is
-      // not desirable in a transition...
+      // Force a redraw before adding the transition class. Not doing this will
+      // apply the end result of the transition instantly, which is not
+      // desirable in a transition...
       this.$container.data('olay', this).height();
-      this.$container.addClass('js-olay-show').off('click', this._hide);
-      this.$content.off('click', stopPropagation);
-      if (this.hideOnClick) {
-        this.$container.click(this._hide);
-        this.$content.click(stopPropagation);
-      }
+      this.$container.addClass('js-olay-show');
+
+      // Delegate events, ensuring no double-binding.
+      delegate(this.$container, 'click', this._$containerClick);
+      delegate(this.$content, 'click', this._$contentClick);
+      delegate(this.$content, 'click', '.js-olay-hide', this._hide);
+
       this.$el.trigger('show');
       var duration = this.duration;
-      if (!duration) return this;
+      if (!this.duration) return this;
       duration += this.transitionDuration;
       this._timeout = setTimeout(this._hide, duration);
       return this;
@@ -128,6 +136,7 @@
     // Use this method to set or update `$el`.
     setElement: function (el) {
       this.$content.empty().append(this.$el = el instanceof $ ? el : $(el));
+      return this;
     },
 
     // Completely remove the `$container` element and its children and all of
@@ -143,15 +152,13 @@
       var $body = $('body');
       var $olays = $('.js-olay-container');
       var active = document.activeElement;
-      this._$active =
-        $olays.length && active === $body[0] ?
-        $olays.last() :
-        $(active);
+      var useLast = $olays.length && active === $body[0];
+      this._$active = useLast ? $olays.last() : $(active);
       $(tabbable).each(function () {
         if ('olayTabindex' in this) return;
-        var $t = $(this);
-        this.olayTabindex = $t.attr('tabindex') || null;
-        $t.attr('tabindex', -1);
+        var $self = $(this);
+        this.olayTabindex = $self.attr('tabindex') || null;
+        $self.attr('tabindex', -1);
       });
       $body.addClass('js-olay-visible').append(this.$container);
       this.$content.attr('tabindex', 0).focus().removeAttr('tabindex');
