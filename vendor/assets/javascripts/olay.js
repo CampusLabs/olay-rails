@@ -30,7 +30,7 @@
   //
   // ```js
   // var olay = new Olay('Howdy!', {duration: 5000});
-  // ```js
+  // ```
   var Olay = window.Olay = function (el, options) {
 
     // Extend the instance with its options.
@@ -40,15 +40,14 @@
     // ensure event callbacks can be removed consistently.
     var self = this;
     this._hide = function () { return self.hide(); };
-    var event;
     this._$containerClick = function (ev) {
-      if (self.hideOnClick && event !== ev.originalEvent) self.hide();
+      var contentClicked = $.contains(self.$cell[0], ev.target);
+      if (self.hideOnClick && !contentClicked) self.hide();
     };
-    this._$contentClick = function (ev) { event = ev.originalEvent; };
 
     // Create the necessary DOM nodes.
     this.$container = $('<div>')
-      .addClass('js-olay-container ')
+      .addClass('js-olay-container')
       .addClass(this.transition)
       .append(
     this.$table = $('<div>')
@@ -109,7 +108,6 @@
 
       // Delegate events, ensuring no double-binding.
       delegate(this.$container, 'click', this._$containerClick);
-      delegate(this.$content, 'click', this._$contentClick);
       delegate(this.$content, 'click', '.js-olay-hide', this._hide);
 
       this.$el.trigger('olay:show');
